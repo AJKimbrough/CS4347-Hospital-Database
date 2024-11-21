@@ -18,11 +18,16 @@ const App = () => {
 
   return (
     <Router>
-      {/* Pass setIsAuthenticated to Navbar */}
+      {/* Navbar will be visible only when the user is authenticated */}
       {isAuthenticated && <Navbar setIsAuthenticated={setIsAuthenticated} />}
       <Routes>
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        {/* Login Route */}
+        <Route
+          path="/login"
+          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+        />
         
+        {/* Protected Routes */}
         <Route
           path="/home"
           element={
@@ -71,6 +76,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* Redirect based on authentication */}
         <Route
           path="/"
           element={
@@ -83,3 +89,4 @@ const App = () => {
 };
 
 export default App;
+

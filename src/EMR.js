@@ -4,7 +4,6 @@ import axios from 'axios';
 const EMR = () => {
   const [records, setRecords] = useState([]);
   const [formData, setFormData] = useState({
-    record_id: '',
     patient_id: '',
     diagnosis: '',
     treatment: '',
@@ -14,6 +13,7 @@ const EMR = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [editRecordId, setEditRecordId] = useState(null);
 
   useEffect(() => {
     axios.get('http://localhost:5001/medical-records')
@@ -28,11 +28,11 @@ const EMR = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editMode) {
-      axios.put(`http://localhost:5001/medical-records/${formData.record_id}`, formData)
+      axios.put(`http://localhost:5001/medical-records/${editRecordId}`, formData)
         .then(() => {
           setEditMode(false);
+          setEditRecordId(null);
           setFormData({
-            record_id: '',
             patient_id: '',
             diagnosis: '',
             treatment: '',
@@ -40,16 +40,15 @@ const EMR = () => {
             medications: '',
             record_date: '',
           });
-          axios.get('http://localhost:5001/medical-records')
-            .then((response) => setRecords(response.data));
+          return axios.get('http://localhost:5001/medical-records');
         })
+        .then((response) => setRecords(response.data))
         .catch((error) => console.error('Error updating record:', error));
     } else {
       axios.post('http://localhost:5001/medical-records', formData)
         .then((response) => {
           setRecords([...records, response.data.newRecord]);
           setFormData({
-            record_id: '',
             patient_id: '',
             diagnosis: '',
             treatment: '',
@@ -64,7 +63,15 @@ const EMR = () => {
 
   const handleEdit = (record) => {
     setEditMode(true);
-    setFormData(record);
+    setEditRecordId(record.record_id);
+    setFormData({
+      patient_id: record.patient_id,
+      diagnosis: record.diagnosis,
+      treatment: record.treatment,
+      doctor_notes: record.doctor_notes,
+      medications: record.medications,
+      record_date: record.record_date,
+    });
   };
 
   const handleDelete = (id) => {
@@ -79,15 +86,6 @@ const EMR = () => {
     <div>
       <h2>Electronic Medical Records</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="record_id"
-          placeholder="Record ID"
-          value={formData.record_id}
-          onChange={handleInputChange}
-          required
-          disabled={editMode} 
-        />
         <input
           type="text"
           name="patient_id"
@@ -150,4 +148,5 @@ const EMR = () => {
 };
 
 export default EMR;
+
 

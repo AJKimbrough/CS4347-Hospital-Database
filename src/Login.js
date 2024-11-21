@@ -27,7 +27,7 @@ const Login = ({ setIsAuthenticated }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [username, password]); 
+  }); 
 
   return (
     <div className="login-container">

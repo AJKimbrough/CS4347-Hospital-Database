@@ -4,7 +4,6 @@ import axios from 'axios';
 const Patients = () => {
   const [patients, setPatients] = useState([]);
   const [formData, setFormData] = useState({
-    patient_id: '',
     first_name: '',
     last_name: '',
     date_of_birth: '',
@@ -16,6 +15,7 @@ const Patients = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [editPatientId, setEditPatientId] = useState(null);
 
   useEffect(() => {
     axios.get('http://localhost:5001/patients')
@@ -30,11 +30,12 @@ const Patients = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editMode) {
-      axios.put(`http://localhost:5001/patients/${formData.patient_id}`, formData)
+      // Update patient data
+      axios.put(`http://localhost:5001/patients/${editPatientId}`, formData)
         .then(() => {
           setEditMode(false);
+          setEditPatientId(null);
           setFormData({
-            patient_id: '',
             first_name: '',
             last_name: '',
             date_of_birth: '',
@@ -44,16 +45,17 @@ const Patients = () => {
             insurance_info: '',
             medical_history: '',
           });
+          // Refresh patient list after update
           axios.get('http://localhost:5001/patients')
             .then((response) => setPatients(response.data));
         })
         .catch((error) => console.error('Error updating patient:', error));
     } else {
+      // Create new patient
       axios.post('http://localhost:5001/patients', formData)
         .then((response) => {
           setPatients([...patients, response.data.patient]);
           setFormData({
-            patient_id: '',
             first_name: '',
             last_name: '',
             date_of_birth: '',
@@ -70,7 +72,17 @@ const Patients = () => {
 
   const handleEdit = (patient) => {
     setEditMode(true);
-    setFormData(patient);
+    setEditPatientId(patient.patient_id);
+    setFormData({
+      first_name: patient.first_name,
+      last_name: patient.last_name,
+      date_of_birth: patient.date_of_birth,
+      gender: patient.gender,
+      contact_info: patient.contact_info,
+      address: patient.address,
+      insurance_info: patient.insurance_info,
+      medical_history: patient.medical_history,
+    });
   };
 
   const handleDelete = (id) => {
@@ -85,15 +97,6 @@ const Patients = () => {
     <div>
       <h2>Patients</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="patient_id"
-          placeholder="Patient ID"
-          value={formData.patient_id}
-          onChange={handleInputChange}
-          required
-          disabled={editMode} 
-        />
         <input
           type="text"
           name="first_name"
@@ -172,3 +175,4 @@ const Patients = () => {
 };
 
 export default Patients;
+
