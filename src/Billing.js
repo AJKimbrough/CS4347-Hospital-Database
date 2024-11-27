@@ -49,11 +49,15 @@ function Billing() {
       return;
     }
 
+    // Format the billing date before submitting (MM/DD/YYYY)
+    const formattedBillingDate = formatDate(formData.billing_date);
+    const updatedFormData = { ...formData, billing_date: formattedBillingDate };
+
     try {
       const response = await fetch('http://localhost:5001/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updatedFormData),
       });
 
       if (response.ok) {
@@ -78,6 +82,15 @@ function Billing() {
     } catch (error) {
       setErrorMessage(error.message);
     }
+  };
+
+  // Helper function to format date (MM/DD/YYYY)
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`;
   };
 
   return (
@@ -231,7 +244,7 @@ function Billing() {
                   <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{bill.patient_id}</td>
                   <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>${bill.amount_due}</td>
                   <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>${bill.outstanding_balance}</td>
-                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{bill.billing_date}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{formatDate(bill.billing_date)}</td>
                   <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{bill.payment_status}</td>
                 </tr>
               ))}

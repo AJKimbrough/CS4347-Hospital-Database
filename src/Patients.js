@@ -1,6 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
 const Patients = () => {
   const [patients, setPatients] = useState([]);
   const [formData, setFormData] = useState({
@@ -93,6 +90,12 @@ const Patients = () => {
       .catch((error) => console.error('Error deleting patient:', error));
   };
 
+  // Function to format date to YYYY-MM-DD
+  const formatDate = (date) => {
+    const newDate = new Date(date);
+    return newDate.toISOString().split('T')[0];  // Format to YYYY-MM-DD
+  };
+
   return (
     <div>
       <h2>Patients</h2>
@@ -164,7 +167,7 @@ const Patients = () => {
       <ul>
         {patients.map((patient) => (
           <li key={patient.patient_id}>
-            {patient.first_name} {patient.last_name} ({patient.patient_id})
+            {patient.first_name} {patient.last_name} ({patient.patient_id}) - Date of Birth: {formatDate(patient.date_of_birth)}
             <button onClick={() => handleEdit(patient)}>Edit</button>
             <button onClick={() => handleDelete(patient.patient_id)}>Delete</button>
           </li>
@@ -175,4 +178,3 @@ const Patients = () => {
 };
 
 export default Patients;
-

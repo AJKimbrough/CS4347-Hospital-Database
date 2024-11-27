@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const Patients = () => {
+function Patients() {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -13,25 +13,31 @@ const Patients = () => {
     medical_history: '',
   });
 
-  const [patients, setPatients] = useState([]);
-  const [editMode, setEditMode] = useState(false);
-  const [editPatientId, setEditPatientId] = useState(null);
   const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [patients, setPatients] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [viewPatients, setViewPatients] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editPatientId, setEditPatientId] = useState(null);
 
   // Fetch existing patients when the component is mounted
   useEffect(() => {
     if (viewPatients) {
       axios.get('http://localhost:5001/patients')
         .then((response) => setPatients(response.data))
-        .catch((error) => console.error('Error fetching patients:', error));
+        .catch((error) => {
+          setErrorMessage('Error fetching patients');
+        });
     }
   }, [viewPatients]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   // Handle form submission for creating or updating a patient
@@ -142,6 +148,7 @@ const Patients = () => {
       textAlign: 'center'
     }}>
       <h2>{editMode ? 'Edit Patient' : 'Register a New Patient'}</h2>
+
       <form onSubmit={handleSubmit} style={{ width: '60%', display: 'grid', gap: '10px' }}>
         <input
           type="text"
@@ -269,47 +276,54 @@ const Patients = () => {
               </tr>
             </thead>
             <tbody>
-              {patients.map((patient) => (
-                <tr key={patient.patient_id} style={{ backgroundColor: '#2A3338' }}>
-                  <td style={{ padding: '10px', border: '1px solid #444' }}>
-                    {patient.first_name} {patient.last_name}
-                  </td>
-                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.date_of_birth}</td>
-                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.gender}</td>
-                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.contact_info}</td>
-                  <td style={{ padding: '10px', border: '1px solid #444' }}>
-                    <button
-                      onClick={() => handleEdit(patient)}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '5px',
-                        backgroundColor: '#0DB8DE',
-                        color: 'white'
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(patient.patient_id)}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '5px',
-                        backgroundColor: '#ff5722',
-                        color: 'white',
-                        marginLeft: '10px'
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {patients.map((patient) => (
+    <tr key={patient.patient_id} style={{ backgroundColor: '#2A3338' }}>
+      <td style={{ padding: '10px', border: '1px solid #444' }}>
+        {patient.first_name} {patient.last_name}
+      </td>
+      <td style={{ padding: '10px', border: '1px solid #444' }}>
+        {new Date(patient.date_of_birth).toLocaleDateString()} {/* Format the date */}
+      </td>
+      <td style={{ padding: '10px', border: '1px solid #444' }}>
+        {patient.gender}
+      </td>
+      <td style={{ padding: '10px', border: '1px solid #444' }}>
+        {patient.contact_info}
+      </td>
+      <td style={{ padding: '10px', border: '1px solid #444' }}>
+        <button
+          onClick={() => handleEdit(patient)}
+          style={{
+            padding: '5px 10px',
+            borderRadius: '5px',
+            backgroundColor: '#0DB8DE',
+            color: 'white',
+            marginRight: '10px',
+          }}
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => handleDelete(patient.patient_id)}
+          style={{
+            padding: '5px 10px',
+            borderRadius: '5px',
+            backgroundColor: '#ff5722',
+            color: 'white',
+          }}
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default Patients;

@@ -190,7 +190,6 @@ app.get('/billing', async (req, res) => {
 });
 
 
-// CREATE Patient 
 app.post('/registration', async (req, res) => {
   const {
     first_name,
@@ -206,14 +205,16 @@ app.post('/registration', async (req, res) => {
   if (!first_name || !last_name || !date_of_birth || !gender || !contact_info || !address) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  
+
+  // Format date_of_birth before storing it
+  const formattedDateOfBirth = new Date(date_of_birth).toISOString().split('T')[0];
 
   try {
     const result = await pool.query(
       `INSERT INTO patients (first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history]
+      [first_name, last_name, formattedDateOfBirth, gender, contact_info, address, insurance_info, medical_history]
     );
     res.status(201).json({ message: 'Patient registered successfully!', patient: result.rows[0] });
   } catch (error) {
@@ -222,24 +223,38 @@ app.post('/registration', async (req, res) => {
   }
 });
 
-// READ Patients
 app.get('/patients', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM patients');
-    res.json(result.rows);
+
+    // Format each patient's date_of_birth to 'YYYY-MM-DD'
+    const formattedPatients = result.rows.map(patient => {
+      const formattedDateOfBirth = new Date(patient.date_of_birth).toISOString().split('T')[0];  // Only the date part
+      return {
+        ...patient,
+        date_of_birth: formattedDateOfBirth,
+      };
+    });
+
+    res.json(formattedPatients);
   } catch (error) {
     console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Error fetching patients' });
   }
 });
 
-// UPDATE Patient
+
 app.put('/patients/:id', async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
 
   if (!Object.keys(updates).length) {
     return res.status(400).json({ error: 'No fields to update' });
+  }
+
+  // If date_of_birth is being updated, ensure it is in the correct format (YYYY-MM-DD)
+  if (updates.date_of_birth) {
+    updates.date_of_birth = new Date(updates.date_of_birth).toISOString().split('T')[0];
   }
 
   try {
@@ -263,7 +278,6 @@ app.put('/patients/:id', async (req, res) => {
   }
 });
 
-
 // DELETE Patient
 app.delete('/patients/:id', async (req, res) => {
   const { id } = req.params;
@@ -279,6 +293,98 @@ app.delete('/patients/:id', async (req, res) => {
     res.status(500).json({ error: 'Error deleting patient' });
   }
 });
+
+
+
+// // CREATE Patient 
+// app.post('/registration', async (req, res) => {
+//   const {
+//     first_name,
+//     last_name,
+//     date_of_birth,
+//     gender,
+//     contact_info,
+//     address,
+//     insurance_info,
+//     medical_history,
+//   } = req.body;
+
+//   if (!first_name || !last_name || !date_of_birth || !gender || !contact_info || !address) {
+//     return res.status(400).json({ error: 'Missing required fields' });
+//   }
+  
+
+//   try {
+//     const result = await pool.query(
+//       `INSERT INTO patients (first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history)
+//        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+//        RETURNING *`,
+//       [first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history]
+//     );
+//     res.status(201).json({ message: 'Patient registered successfully!', patient: result.rows[0] });
+//   } catch (error) {
+//     console.error('Error adding patient:', error);
+//     res.status(500).json({ error: 'Database error while adding patient' });
+//   }
+// });
+
+// // READ Patients
+// app.get('/patients', async (req, res) => {
+//   try {
+//     const result = await pool.query('SELECT * FROM patients');
+//     res.json(result.rows);
+//   } catch (error) {
+//     console.error('Error fetching patients:', error);
+//     res.status(500).json({ error: 'Error fetching patients' });
+//   }
+// });
+
+// // UPDATE Patient
+// app.put('/patients/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const updates = req.body;
+
+//   if (!Object.keys(updates).length) {
+//     return res.status(400).json({ error: 'No fields to update' });
+//   }
+
+//   try {
+//     const keys = Object.keys(updates);
+//     const values = Object.values(updates);
+//     const setString = keys.map((key, index) => `${key} = $${index + 2}`).join(', ');
+
+//     const result = await pool.query(
+//       `UPDATE patients SET ${setString} WHERE patient_id = $1 RETURNING *`,
+//       [id, ...values]
+//     );
+
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({ error: 'Patient not found' });
+//     }
+
+//     res.json({ message: 'Patient updated successfully', patient: result.rows[0] });
+//   } catch (error) {
+//     console.error('Error updating patient:', error);
+//     res.status(500).json({ error: 'Error updating patient' });
+//   }
+// });
+
+
+// // DELETE Patient
+// app.delete('/patients/:id', async (req, res) => {
+//   const { id } = req.params;
+
+//   try {
+//     const result = await pool.query('DELETE FROM patients WHERE patient_id = $1 RETURNING *', [id]);
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({ error: 'Patient not found' });
+//     }
+//     res.json({ message: 'Patient deleted successfully' });
+//   } catch (error) {
+//     console.error('Error deleting patient:', error);
+//     res.status(500).json({ error: 'Error deleting patient' });
+//   }
+// });
 
 //Injection
 app.put('/patient/:id', async (req, res) => {

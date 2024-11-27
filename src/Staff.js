@@ -14,6 +14,12 @@ function Staff() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showRecords, setShowRecords] = useState(false);
 
+  // Function to format the date as YYYY-MM-DD
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];  // Get only the YYYY-MM-DD part
+  };
+
   // Fetch staff from the backend
   const fetchStaff = async () => {
     try {
@@ -210,7 +216,9 @@ function Staff() {
                   <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>
                     {staff.contact_info || 'N/A'}
                   </td>
-                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.hire_date}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>
+                    {formatDate(staff.hire_date)}
+                  </td>
                 </tr>
               ))}
             </tbody>
