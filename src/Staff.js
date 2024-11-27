@@ -1,101 +1,222 @@
 import React, { useState, useEffect } from 'react';
 
 function Staff() {
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    position: '',
+    contact_info: '',
+    hire_date: '',
+  });
+
+  const [confirmationMessage, setConfirmationMessage] = useState('');
   const [staffList, setStaffList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showRecords, setShowRecords] = useState(false);
 
   // Fetch staff from the backend
   const fetchStaff = async () => {
     try {
       const response = await fetch('http://localhost:5001/staff');
-      if (response.ok) {
-        const staffData = await response.json();
-        setStaffList(staffData); 
-        setIsLoading(false); 
-      } else {
-        console.error('Failed to fetch staff data');
+      if (!response.ok) {
+        throw new Error('Failed to fetch staff data');
       }
-    } catch (err) {
-      console.error('Error fetching staff:', err);
+      const staffData = await response.json();
+      setStaffList(staffData);
+    } catch (error) {
+      setErrorMessage('Failed to fetch staff data');
     }
   };
 
   useEffect(() => {
-    fetchStaff(); 
-  }, []); 
+    fetchStaff();
+  }, []);
 
-  // Handle form submission
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
-    // Create an object from the form data
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    // If contact_info is empty, set it to null before sending it to the server
-    if (data.contact_info === '') {
-      data.contact_info = null;
+    if (!formData.first_name || !formData.last_name || !formData.position || !formData.hire_date) {
+      setErrorMessage('Please fill in all required fields.');
+      return;
     }
 
-    // Log the data before sending it to the server 
-    console.log('Form data:', data);
-
     try {
-      // Send the data to the server
       const response = await fetch('http://localhost:5001/staff', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          position: data.position,
-          contact_info: data.contact_info,
-          hire_date: data.hire_date,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        setFormSubmitted(true);
-        fetchStaff(); // Refresh staff list after adding a new staff member
+        setErrorMessage('');
+        setConfirmationMessage('Staff info submitted successfully!');
+        setFormData({
+          first_name: '',
+          last_name: '',
+          position: '',
+          contact_info: '',
+          hire_date: '',
+        });
+
+        const updatedResponse = await fetch('http://localhost:5001/staff');
+        const updatedData = await updatedResponse.json();
+        setStaffList(updatedData);
       } else {
-        console.error('Failed to submit staff information.');
+        throw new Error('Failed to submit staff info.');
       }
     } catch (error) {
-      console.error('Error:', error);
+      setErrorMessage(error.message);
     }
   };
 
-  // Render the staff list and form
   return (
-    <div>
-      <h1>Staff List</h1>
-      
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul>
-          {staffList.map((staff) => (
-            <li key={staff.staff_id}>
-              {staff.first_name} {staff.last_name} - {staff.position}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#222D32',
+      color: 'white',
+      textAlign: 'center',
+    }}>
+      <h1>Staff Management</h1>
 
-      <h2>Add New Staff</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="first_name" placeholder="First Name" required />
-        <input type="text" name="last_name" placeholder="Last Name" required />
-        <input type="text" name="position" placeholder="Position" required />
-        <input type="text" name="contact_info" placeholder="Contact Info" />
-        <input type="date" name="hire_date" required />
-        <button type="submit">Add Staff</button>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '20px',
+          width: '50%',
+        }}
+      >
+        <input
+          type="text"
+          name="first_name"
+          placeholder="First Name (Required)"
+          value={formData.first_name}
+          onChange={handleChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
+        />
+        <input
+          type="text"
+          name="last_name"
+          placeholder="Last Name (Required)"
+          value={formData.last_name}
+          onChange={handleChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
+        />
+        <input
+          type="text"
+          name="position"
+          placeholder="Position (Required)"
+          value={formData.position}
+          onChange={handleChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
+        />
+        <input
+          type="text"
+          name="contact_info"
+          placeholder="Contact Info"
+          value={formData.contact_info}
+          onChange={handleChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
+        />
+        <input
+          type="date"
+          name="hire_date"
+          value={formData.hire_date}
+          onChange={handleChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
+        />
+        <button
+          type="submit"
+          style={{
+            gridColumn: '1 / -1',
+            padding: '10px',
+            borderRadius: '5px',
+            backgroundColor: '#0DB8DE',
+            color: 'white',
+            fontWeight: 'bold',
+          }}
+        >
+          Add Staff
+        </button>
       </form>
 
-      {formSubmitted && <p>Staff added successfully!</p>}
+      {confirmationMessage && (
+        <div style={{ marginTop: '20px', color: 'green' }}>
+          {confirmationMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div style={{ marginTop: '20px', color: 'red' }}>
+          {errorMessage}
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowRecords(!showRecords)}
+        style={{
+          marginTop: '20px',
+          padding: '10px 20px',
+          borderRadius: '5px',
+          backgroundColor: '#0DB8DE',
+          color: 'white',
+          fontWeight: 'bold',
+        }}
+      >
+        {showRecords ? 'Hide Staff Records' : 'Show Staff Records'}
+      </button>
+
+      {showRecords && staffList.length > 0 && (
+        <div style={{ marginTop: '20px', width: '80%' }}>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              backgroundColor: '#2A3E4C',
+              color: 'white',
+              borderRadius: '8px',
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>Employee ID</th>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>First Name</th>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>Last Name</th>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>Position</th>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>Contact Info</th>
+                <th style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>Hire Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staffList.map((staff, index) => (
+                <tr key={staff.staff_id} style={{ backgroundColor: index % 2 === 0 ? '#34495E' : '#2A3E4C' }}>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.staff_id}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.first_name}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.last_name}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.position}</td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>
+                    {staff.contact_info || 'N/A'}
+                  </td>
+                  <td style={{ border: '1px solid #444', padding: '12px', textAlign: 'center' }}>{staff.hire_date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

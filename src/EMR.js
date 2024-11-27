@@ -14,12 +14,15 @@ const EMR = () => {
 
   const [editMode, setEditMode] = useState(false);
   const [editRecordId, setEditRecordId] = useState(null);
+  const [showRecords, setShowRecords] = useState(false);  // To control the visibility of records
 
   useEffect(() => {
-    axios.get('http://localhost:5001/medical-records')
-      .then((response) => setRecords(response.data))
-      .catch((error) => console.error('Error fetching medical records:', error));
-  }, []);
+    if (showRecords) {
+      axios.get('http://localhost:5001/medical-records')
+        .then((response) => setRecords(response.data))
+        .catch((error) => console.error('Error fetching medical records:', error));
+    }
+  }, [showRecords]); // Fetch records only when the "showRecords" state is true
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,9 +43,8 @@ const EMR = () => {
             medications: '',
             record_date: '',
           });
-          return axios.get('http://localhost:5001/medical-records');
+          setShowRecords(true);  // Show records after update
         })
-        .then((response) => setRecords(response.data))
         .catch((error) => console.error('Error updating record:', error));
     } else {
       axios.post('http://localhost:5001/medical-records', formData)
@@ -83,9 +85,24 @@ const EMR = () => {
   };
 
   return (
-    <div>
+    <div style={{
+      color: 'white',
+      textAlign: 'center',
+      backgroundColor: '#222D32',
+      minHeight: '100vh',
+      padding: '20px',
+    }}>
       <h2>Electronic Medical Records</h2>
-      <form onSubmit={handleSubmit}>
+      <form 
+        onSubmit={handleSubmit} 
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          gap: '15px',
+          maxWidth: '500px',
+          margin: '0 auto',
+        }}
+      >
         <input
           type="text"
           name="patient_id"
@@ -93,6 +110,7 @@ const EMR = () => {
           value={formData.patient_id}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -101,6 +119,7 @@ const EMR = () => {
           value={formData.diagnosis}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -109,12 +128,14 @@ const EMR = () => {
           value={formData.treatment}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <textarea
           name="doctor_notes"
           placeholder="Doctor's Notes"
           value={formData.doctor_notes}
           onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -122,6 +143,7 @@ const EMR = () => {
           placeholder="Medications"
           value={formData.medications}
           onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="date"
@@ -129,24 +151,92 @@ const EMR = () => {
           value={formData.record_date}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
-        <button type="submit">{editMode ? 'Update Record' : 'Add Record'}</button>
+        <button 
+          type="submit" 
+          style={{
+            padding: '10px',
+            borderRadius: '5px',
+            backgroundColor: '#0DB8DE',
+            color: 'white',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
+        >
+          {editMode ? 'Update Record' : 'Add Record'}
+        </button>
       </form>
 
-      <h3>Medical Records List</h3>
-      <ul>
-        {records.map((record) => (
-          <li key={record.record_id}>
-            Record ID: {record.record_id} (Patient ID: {record.patient_id})
-            <button onClick={() => handleEdit(record)}>Edit</button>
-            <button onClick={() => handleDelete(record.record_id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      <button 
+        onClick={() => setShowRecords(!showRecords)}
+        style={{
+          marginTop: '20px',
+          padding: '10px 20px',
+          backgroundColor: '#0DB8DE',
+          color: 'white',
+          borderRadius: '5px',
+          cursor: 'pointer',
+        }}
+      >
+        {showRecords ? 'Hide Records' : 'Show Records'}
+      </button>
+
+      {showRecords && (
+        <div style={{ marginTop: '30px' }}>
+          <h3>Medical Records List</h3>
+          <table style={{ margin: '0 auto', width: '80%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#34495e' }}>
+                <th style={{ padding: '10px', color: 'white', textAlign: 'center' }}>Record ID</th>
+                <th style={{ padding: '10px', color: 'white', textAlign: 'center' }}>Patient ID</th>
+                <th style={{ padding: '10px', color: 'white', textAlign: 'center' }}>Diagnosis</th>
+                <th style={{ padding: '10px', color: 'white', textAlign: 'center' }}>Treatment</th>
+                <th style={{ padding: '10px', color: 'white', textAlign: 'center' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((record) => (
+                <tr key={record.record_id}>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>{record.record_id}</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>{record.patient_id}</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>{record.diagnosis}</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>{record.treatment}</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    <button 
+                      onClick={() => handleEdit(record)} 
+                      style={{
+                        marginRight: '10px',
+                        padding: '5px 10px',
+                        borderRadius: '5px',
+                        backgroundColor: '#3498db',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(record.record_id)} 
+                      style={{
+                        padding: '5px 10px',
+                        borderRadius: '5px',
+                        backgroundColor: '#e74c3c',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
 
 export default EMR;
-
-

@@ -95,11 +95,11 @@ function Scheduling() {
   };
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4" style={{ textAlign: 'center', color: 'white' }}>
       <h1>Appointment Scheduling</h1>
 
       {/* Appointment Form */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ width: '60%', margin: '0 auto', display: 'grid', gap: '10px' }}>
         <label>
           Patient ID:
           <input
@@ -108,9 +108,9 @@ function Scheduling() {
             value={formData.patient_id}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           />
         </label>
-        <br />
         <label>
           Staff ID:
           <input
@@ -119,9 +119,9 @@ function Scheduling() {
             value={formData.staff_id}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           />
         </label>
-        <br />
         <label>
           Date:
           <input
@@ -130,9 +130,9 @@ function Scheduling() {
             value={formData.date}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           />
         </label>
-        <br />
         <label>
           Time:
           <input
@@ -141,9 +141,9 @@ function Scheduling() {
             value={formData.time}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           />
         </label>
-        <br />
         <label>
           Reason:
           <input
@@ -152,9 +152,9 @@ function Scheduling() {
             value={formData.reason}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           />
         </label>
-        <br />
         <label>
           Status:
           <select
@@ -162,6 +162,7 @@ function Scheduling() {
             value={formData.status}
             onChange={handleChange}
             required
+            style={{ padding: '10px', borderRadius: '5px' }}
           >
             <option value="">Select Status</option>
             <option value="Pending">Pending</option>
@@ -169,23 +170,74 @@ function Scheduling() {
             <option value="Cancelled">Cancelled</option>
           </select>
         </label>
-        <br />
-        <button type="submit">{selectedAppointmentId ? 'Update Appointment' : 'Schedule Appointment'}</button>
+        <button
+          type="submit"
+          style={{
+            padding: '10px',
+            borderRadius: '5px',
+            backgroundColor: '#0DB8DE',
+            color: 'white',
+            fontWeight: 'bold',
+          }}
+        >
+          {selectedAppointmentId ? 'Update Appointment' : 'Schedule Appointment'}
+        </button>
       </form>
 
       {confirmationMessage && <p>{confirmationMessage}</p>}
       {errorMessage && <p>{errorMessage}</p>}
 
       <h2>Existing Appointments</h2>
-      <ul>
-        {appointments.map((appointment) => (
-          <li key={appointment.appointment_id}>
-            {appointment.patient_id} - {appointment.reason_for_visit} on {appointment.appointment_date}
-            <button onClick={() => handleEdit(appointment)}>Edit</button>
-            <button onClick={() => handleDelete(appointment.appointment_id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      <div style={{ width: '80%', margin: '20px auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#1A2226' }}>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Patient ID</th>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Reason</th>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Date</th>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Time</th>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Status</th>
+              <th style={{ padding: '10px', border: '1px solid #444' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((appointment) => (
+              <tr key={appointment.appointment_id} style={{ backgroundColor: '#2A3338' }}>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>{appointment.patient_id}</td>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>{appointment.reason_for_visit}</td>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>{appointment.appointment_date.split(' ')[0]}</td>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>{appointment.appointment_date.split(' ')[1]}</td>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>{appointment.status}</td>
+                <td style={{ padding: '10px', border: '1px solid #444' }}>
+                  <button
+                    onClick={() => handleEdit(appointment)}
+                    style={{
+                      padding: '5px 10px',
+                      borderRadius: '5px',
+                      backgroundColor: '#0DB8DE',
+                      color: 'white',
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(appointment.appointment_id)}
+                    style={{
+                      padding: '5px 10px',
+                      borderRadius: '5px',
+                      backgroundColor: '#ff5722',
+                      color: 'white',
+                      marginLeft: '10px',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

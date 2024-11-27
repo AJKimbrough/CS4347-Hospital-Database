@@ -263,6 +263,7 @@ app.put('/patients/:id', async (req, res) => {
   }
 });
 
+
 // DELETE Patient
 app.delete('/patients/:id', async (req, res) => {
   const { id } = req.params;
@@ -278,6 +279,44 @@ app.delete('/patients/:id', async (req, res) => {
     res.status(500).json({ error: 'Error deleting patient' });
   }
 });
+
+//Injection
+app.put('/patient/:id', async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (!Object.keys(updates).length) {
+    return res.status(400).json({ error: 'No fields to update' });
+  }
+
+  try {
+    // 
+    const keys = Object.keys(updates);
+    const values = Object.values(updates);
+    
+    const setString = keys.map((key, index) => `${key} = $${index + 2}`).join(', ');
+    
+    //prepared statement in conjunction with pool.query
+    const query = `
+      UPDATE patients
+      SET ${setString}
+      WHERE patient_id = $1
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [id, ...values]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    res.json({ message: 'Patient updated successfully', patient: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating patient:', error);
+    res.status(500).json({ error: 'Error updating patient' });
+  }
+});
+
 
 
 // Routes for Medical Records

@@ -24,7 +24,7 @@ const App = () => {
         {/* Login Route */}
         <Route
           path="/login"
-          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+          element={<Login setIsAuthenticated={setIsAuthenticated} />} 
         />
         
         {/* Protected Routes */}

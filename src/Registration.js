@@ -18,7 +18,7 @@ const Patients = () => {
   const [editPatientId, setEditPatientId] = useState(null);
   const [confirmationMessage, setConfirmationMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [viewPatients, setViewPatients] = useState(false);  
+  const [viewPatients, setViewPatients] = useState(false);
 
   // Fetch existing patients when the component is mounted
   useEffect(() => {
@@ -131,9 +131,18 @@ const Patients = () => {
   };
 
   return (
-    <div>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#222D32',
+      color: 'white',
+      textAlign: 'center'
+    }}>
       <h2>{editMode ? 'Edit Patient' : 'Register a New Patient'}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ width: '60%', display: 'grid', gap: '10px' }}>
         <input
           type="text"
           name="first_name"
@@ -141,6 +150,7 @@ const Patients = () => {
           value={formData.first_name}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -149,6 +159,7 @@ const Patients = () => {
           value={formData.last_name}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="date"
@@ -156,6 +167,7 @@ const Patients = () => {
           value={formData.date_of_birth}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -164,6 +176,7 @@ const Patients = () => {
           value={formData.gender}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -172,6 +185,7 @@ const Patients = () => {
           value={formData.contact_info}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -180,6 +194,7 @@ const Patients = () => {
           value={formData.address}
           onChange={handleInputChange}
           required
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <input
           type="text"
@@ -187,38 +202,110 @@ const Patients = () => {
           placeholder="Insurance Info"
           value={formData.insurance_info}
           onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
         <textarea
           name="medical_history"
           placeholder="Medical History"
           value={formData.medical_history}
           onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '5px' }}
         />
-        <button type="submit">{editMode ? 'Update Patient' : 'Register Patient'}</button>
-        {editMode && <button type="button" onClick={handleCancel}>Cancel</button>}
+        <button type="submit" style={{
+          padding: '10px',
+          borderRadius: '5px',
+          backgroundColor: '#0DB8DE',
+          color: 'white',
+          fontWeight: 'bold'
+        }}>
+          {editMode ? 'Update Patient' : 'Register Patient'}
+        </button>
+        {editMode && (
+          <button
+            type="button"
+            onClick={handleCancel}
+            style={{
+              padding: '10px',
+              borderRadius: '5px',
+              backgroundColor: '#ff5722',
+              color: 'white',
+              fontWeight: 'bold'
+            }}
+          >
+            Cancel
+          </button>
+        )}
       </form>
-      
-      {confirmationMessage && <div style={{ color: 'green' }}>{confirmationMessage}</div>}
-      {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
 
-      <hr />
+      {confirmationMessage && <div style={{ color: 'green', marginTop: '10px' }}>{confirmationMessage}</div>}
+      {errorMessage && <div style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</div>}
 
-      <button onClick={() => setViewPatients(!viewPatients)}>
+      <hr style={{ margin: '20px 0' }} />
+
+      <button
+        onClick={() => setViewPatients(!viewPatients)}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '5px',
+          backgroundColor: '#0DB8DE',
+          color: 'white',
+          fontWeight: 'bold'
+        }}
+      >
         {viewPatients ? 'Hide Patients' : 'View All Patients'}
       </button>
 
       {viewPatients && (
-        <div>
+        <div style={{ marginTop: '20px', width: '80%' }}>
           <h3>Patient List</h3>
-          <ul>
-            {patients.map((patient) => (
-              <li key={patient.patient_id}>
-                {patient.first_name} {patient.last_name} ({patient.patient_id})
-                <button onClick={() => handleEdit(patient)}>Edit</button>
-                <button onClick={() => handleDelete(patient.patient_id)}>Delete</button>
-              </li>
-            ))}
-          </ul>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#1A2226' }}>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Name</th>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Date of Birth</th>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Gender</th>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Contact Info</th>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {patients.map((patient) => (
+                <tr key={patient.patient_id} style={{ backgroundColor: '#2A3338' }}>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>
+                    {patient.first_name} {patient.last_name}
+                  </td>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.date_of_birth}</td>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.gender}</td>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>{patient.contact_info}</td>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>
+                    <button
+                      onClick={() => handleEdit(patient)}
+                      style={{
+                        padding: '5px 10px',
+                        borderRadius: '5px',
+                        backgroundColor: '#0DB8DE',
+                        color: 'white'
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(patient.patient_id)}
+                      style={{
+                        padding: '5px 10px',
+                        borderRadius: '5px',
+                        backgroundColor: '#ff5722',
+                        color: 'white',
+                        marginLeft: '10px'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -226,4 +313,3 @@ const Patients = () => {
 };
 
 export default Patients;
-
