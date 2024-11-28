@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Home from './Home';
@@ -10,7 +10,14 @@ import Staff from './Staff';
 import Login from './Login';
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  //Retrieve authentication state from localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    localStorage.getItem('isAuthenticated') === 'true'
+  );
+
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated);
+  }, [isAuthenticated]);
 
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" />;
@@ -89,4 +96,3 @@ const App = () => {
 };
 
 export default App;
-

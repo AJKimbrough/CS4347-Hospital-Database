@@ -6,8 +6,9 @@ const Navbar = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    navigate('/login'); 
+    localStorage.removeItem('isAuthenticated'); // Clear authentication
+    setIsAuthenticated(false); // Update state
+    navigate('/login'); // Redirect to login page
   };
 
   return (

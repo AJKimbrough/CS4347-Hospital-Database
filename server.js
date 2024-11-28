@@ -252,7 +252,6 @@ app.put('/patients/:id', async (req, res) => {
     return res.status(400).json({ error: 'No fields to update' });
   }
 
-  // If date_of_birth is being updated, ensure it is in the correct format (YYYY-MM-DD)
   if (updates.date_of_birth) {
     updates.date_of_birth = new Date(updates.date_of_birth).toISOString().split('T')[0];
   }
