@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 function Scheduling() {
   const [formData, setFormData] = useState({
@@ -16,16 +15,23 @@ function Scheduling() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [showAppointments, setShowAppointments] = useState(false);
 
-  // Fetch appointments from the server when the component mounts
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const response = await axios.get('http://localhost:5001/scheduling');
-        setAppointments(response.data);
-      } catch (error) {
-        console.error('Error fetching appointments:', error);
+  // Fetch appointments from the server
+  const fetchAppointments = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/scheduling');
+      if (!response.ok) {
+        throw new Error('Error fetching appointments');
       }
-    };
+      const data = await response.json();
+      setAppointments(data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      setErrorMessage('Error fetching appointments');
+    }
+  };
+
+  
+  useEffect(() => {
     fetchAppointments();
   }, []);
 
@@ -40,21 +46,35 @@ function Scheduling() {
     const appointmentData = {
       patient_id: formData.patient_id,
       staff_id: formData.staff_id,
-      appointment_date: `${formData.date} ${formData.time}`, // Combine date and time into a single timestamp
+      appointment_date: `${formData.date} ${formData.time}`, 
       reason_for_visit: formData.reason,
       status: formData.status,
     };
 
     try {
-      if (selectedAppointmentId) {
-        // Update existing appointment
-        const response = await axios.put(`http://localhost:5001/scheduling/${selectedAppointmentId}`, appointmentData);
-        setConfirmationMessage(response.data.message);
-      } else {
-        // Create a new appointment
-        const response = await axios.post('http://localhost:5001/scheduling', appointmentData);
-        setConfirmationMessage(response.data.message);
+      const url = selectedAppointmentId
+        ? `http://localhost:5001/scheduling/${selectedAppointmentId}`
+        : 'http://localhost:5001/scheduling';
+      const method = selectedAppointmentId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error submitting appointment');
       }
+
+      const result = await response.json();
+      setConfirmationMessage(result.message);
+
+      
+      fetchAppointments();
+
       // Clear form data after successful submission
       setFormData({
         patient_id: '',
@@ -64,40 +84,48 @@ function Scheduling() {
         reason: '',
         status: '',
       });
-      setSelectedAppointmentId(null); // Reset selected appointment ID
+      setSelectedAppointmentId(null); 
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.error || 'An error occurred while scheduling the appointment.'
-      );
+      setErrorMessage(error.message || 'An error occurred while scheduling the appointment.');
     }
   };
 
   const handleDelete = async (appointmentId) => {
     try {
-      await axios.delete(`http://localhost:5001/scheduling/${appointmentId}`);
+      const response = await fetch(`http://localhost:5001/scheduling/${appointmentId}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Error deleting appointment');
+      }
+  
       setConfirmationMessage('Appointment deleted successfully');
-      // Remove deleted appointment from the list
+      
+      // Remove deleted appointment 
       setAppointments(appointments.filter((appointment) => appointment.appointment_id !== appointmentId));
     } catch (error) {
       setErrorMessage('Error deleting appointment');
     }
   };
+  
 
   const handleEdit = (appointment) => {
     setSelectedAppointmentId(appointment.appointment_id);
     setFormData({
       patient_id: appointment.patient_id,
       staff_id: appointment.staff_id,
-      date: appointment.appointment_date.split(' ')[0], // Split date and time
+      date: appointment.appointment_date.split(' ')[0], 
       time: appointment.appointment_date.split(' ')[1],
       reason: appointment.reason_for_visit,
       status: appointment.status,
     });
   };
 
+  // Format date and time for table
   const formatDate = (isoDate) => {
     const date = new Date(isoDate);
-    const formattedDate = date.toISOString().split('T')[0]; // Extracts the date part (YYYY-MM-DD)
+    const formattedDate = date.toISOString().split('T')[0]; 
     return formattedDate;
   };
 

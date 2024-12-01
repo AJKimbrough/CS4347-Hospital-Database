@@ -20,7 +20,7 @@ function Staff() {
     return date.toISOString().split('T')[0];  // Get only the YYYY-MM-DD part
   };
 
-  // Fetch staff from the backend
+  // Fetch staff 
   const fetchStaff = async () => {
     try {
       const response = await fetch('http://localhost:5001/staff');

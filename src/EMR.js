@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 const EMR = () => {
   const [records, setRecords] = useState([]);
@@ -14,24 +13,40 @@ const EMR = () => {
 
   const [editMode, setEditMode] = useState(false);
   const [editRecordId, setEditRecordId] = useState(null);
-  const [showRecords, setShowRecords] = useState(false);  // To control the visibility of records
+  const [showRecords, setShowRecords] = useState(false);
 
   useEffect(() => {
     if (showRecords) {
-      axios.get('http://localhost:5001/medical-records')
-        .then((response) => setRecords(response.data))
+      fetch('http://localhost:5001/medical-records')
+        .then((response) => response.json())
+        .then((data) => setRecords(data))
         .catch((error) => console.error('Error fetching medical records:', error));
     }
-  }, [showRecords]); // Fetch records only when the "showRecords" state is true
+  }, [showRecords]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Fetch request
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (editMode) {
-      axios.put(`http://localhost:5001/medical-records/${editRecordId}`, formData)
+      fetch('http://localhost:5001/medical-records/' + editRecordId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patient_id: parseInt(formData.patient_id),
+          diagnosis: formData.diagnosis,
+          treatment: formData.treatment,
+          doctor_notes: formData.doctor_notes,
+          medications: formData.medications,
+          record_date: formData.record_date,
+        }),
+      })
         .then(() => {
           setEditMode(false);
           setEditRecordId(null);
@@ -43,13 +58,25 @@ const EMR = () => {
             medications: '',
             record_date: '',
           });
-          setShowRecords(true);  // Show records after update
+          setShowRecords(true);
         })
         .catch((error) => console.error('Error updating record:', error));
     } else {
-      axios.post('http://localhost:5001/medical-records', formData)
-        .then((response) => {
-          setRecords([...records, response.data.newRecord]);
+      fetch('http://localhost:5001/medical-records', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patient_id: parseInt(formData.patient_id),
+          diagnosis: formData.diagnosis,
+          treatment: formData.treatment,
+          doctor_notes: formData.doctor_notes,
+          medications: formData.medications,
+          record_date: formData.record_date,
+        }),
+      })
+        .then(() => {
           setFormData({
             patient_id: '',
             diagnosis: '',
@@ -58,14 +85,14 @@ const EMR = () => {
             medications: '',
             record_date: '',
           });
+          setShowRecords(true);
         })
         .catch((error) => console.error('Error adding record:', error));
     }
   };
 
+  // Edit request
   const handleEdit = (record) => {
-    setEditMode(true);
-    setEditRecordId(record.record_id);
     setFormData({
       patient_id: record.patient_id,
       diagnosis: record.diagnosis,
@@ -74,14 +101,21 @@ const EMR = () => {
       medications: record.medications,
       record_date: record.record_date,
     });
+    setEditMode(true);
+    setEditRecordId(record.record_id);
   };
 
+  // Delete request
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:5001/medical-records/${id}`)
-      .then(() => {
-        setRecords(records.filter((r) => r.record_id !== id));
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      fetch('http://localhost:5001/medical-records/' + id, {
+        method: 'DELETE',
       })
-      .catch((error) => console.error('Error deleting record:', error));
+        .then(() => {
+          setRecords(records.filter((r) => r.record_id !== id));
+        })
+        .catch((error) => console.error('Error deleting record:', error));
+    }
   };
 
   return (

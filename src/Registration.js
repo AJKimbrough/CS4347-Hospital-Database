@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 function Patients() {
   const [formData, setFormData] = useState({
@@ -22,11 +21,20 @@ function Patients() {
 
   useEffect(() => {
     if (viewPatients) {
-      axios.get('http://localhost:5001/patients')
-        .then((response) => setPatients(response.data))
-        .catch(() => setErrorMessage('Error fetching patients'));
+      fetchPatients();
     }
   }, [viewPatients]);
+
+  // Fetch request
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/patients');
+      const data = await response.json();
+      setPatients(data);
+    } catch (error) {
+      setErrorMessage('Error fetching patients');
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,24 +44,51 @@ function Patients() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (editMode) {
-      axios.put(`http://localhost:5001/patients/${editPatientId}`, formData)
-        .then(() => {
-          resetForm();
-          setConfirmationMessage('Patient updated successfully');
-        })
-        .catch(() => setErrorMessage('Error updating patient'));
+      await updatePatient();
     } else {
-      axios.post('http://localhost:5001/registration', formData)
-        .then((response) => {
-          setPatients([...patients, response.data.patient]);
-          resetForm();
-          setConfirmationMessage(response.data.message);
-        })
-        .catch(() => setErrorMessage('Error adding patient'));
+      await registerPatient();
+    }
+  };
+  // New patient
+  const registerPatient = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      setPatients([...patients, data.patient]);
+      resetForm();
+      setConfirmationMessage(data.message);
+    } catch (error) {
+      setErrorMessage('Error adding patient');
+    }
+  };
+
+  // Update request
+  const updatePatient = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/patients/${editPatientId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      resetForm();
+      setConfirmationMessage(data.message);
+    } catch (error) {
+      setErrorMessage('Error updating patient');
     }
   };
 
@@ -72,10 +107,19 @@ function Patients() {
     });
   };
 
-  const handleDelete = (id) => {
-    axios.delete(`http://localhost:5001/patients/${id}`)
-      .then(() => setPatients(patients.filter((p) => p.patient_id !== id)))
-      .catch(() => setErrorMessage('Error deleting patient'));
+  // Delete request
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5001/patients/${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      setPatients(patients.filter((p) => p.patient_id !== id));
+      setConfirmationMessage(data.message);
+    } catch (error) {
+      setErrorMessage('Error deleting patient');
+    }
   };
 
   const resetForm = () => {
@@ -92,6 +136,7 @@ function Patients() {
       medical_history: '',
     });
   };
+
 
   return (
     <div style={{
@@ -221,6 +266,7 @@ function Patients() {
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
             <thead>
               <tr style={{ backgroundColor: '#1A2226', color: 'white' }}>
+                <th style={{ padding: '10px', border: '1px solid #444' }}>Patient ID</th>
                 <th style={{ padding: '10px', border: '1px solid #444' }}>Name</th>
                 <th style={{ padding: '10px', border: '1px solid #444' }}>Date of Birth</th>
                 <th style={{ padding: '10px', border: '1px solid #444' }}>Gender</th>
@@ -231,6 +277,9 @@ function Patients() {
             <tbody>
               {patients.map((patient) => (
                 <tr key={patient.patient_id} style={{ backgroundColor: '#2A3338', color: 'white' }}>
+                  <td style={{ padding: '10px', border: '1px solid #444' }}>
+                    {patient.patient_id}
+                  </td>
                   <td style={{ padding: '10px', border: '1px solid #444' }}>
                     {patient.first_name} {patient.last_name}
                   </td>
@@ -246,24 +295,13 @@ function Patients() {
                   <td style={{ padding: '10px', border: '1px solid #444' }}>
                     <button 
                       onClick={() => handleEdit(patient)} 
-                      style={{
-                        marginRight: '10px', 
-                        padding: '5px 10px', 
-                        borderRadius: '5px', 
-                        backgroundColor: '#0DB8DE', 
-                        color: 'white',
-                      }}
+                      style={{ backgroundColor: '#0DB8DE', padding: '5px', borderRadius: '5px' }}
                     >
                       Edit
                     </button>
                     <button 
                       onClick={() => handleDelete(patient.patient_id)} 
-                      style={{
-                        padding: '5px 10px', 
-                        borderRadius: '5px', 
-                        backgroundColor: 'red', 
-                        color: 'white',
-                      }}
+                      style={{ backgroundColor: '#FF6347', padding: '5px', borderRadius: '5px', marginLeft: '10px' }}
                     >
                       Delete
                     </button>

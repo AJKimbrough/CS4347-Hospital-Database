@@ -295,135 +295,6 @@ app.delete('/patients/:id', async (req, res) => {
 
 
 
-// // CREATE Patient 
-// app.post('/registration', async (req, res) => {
-//   const {
-//     first_name,
-//     last_name,
-//     date_of_birth,
-//     gender,
-//     contact_info,
-//     address,
-//     insurance_info,
-//     medical_history,
-//   } = req.body;
-
-//   if (!first_name || !last_name || !date_of_birth || !gender || !contact_info || !address) {
-//     return res.status(400).json({ error: 'Missing required fields' });
-//   }
-  
-
-//   try {
-//     const result = await pool.query(
-//       `INSERT INTO patients (first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history)
-//        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-//        RETURNING *`,
-//       [first_name, last_name, date_of_birth, gender, contact_info, address, insurance_info, medical_history]
-//     );
-//     res.status(201).json({ message: 'Patient registered successfully!', patient: result.rows[0] });
-//   } catch (error) {
-//     console.error('Error adding patient:', error);
-//     res.status(500).json({ error: 'Database error while adding patient' });
-//   }
-// });
-
-// // READ Patients
-// app.get('/patients', async (req, res) => {
-//   try {
-//     const result = await pool.query('SELECT * FROM patients');
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error('Error fetching patients:', error);
-//     res.status(500).json({ error: 'Error fetching patients' });
-//   }
-// });
-
-// // UPDATE Patient
-// app.put('/patients/:id', async (req, res) => {
-//   const { id } = req.params;
-//   const updates = req.body;
-
-//   if (!Object.keys(updates).length) {
-//     return res.status(400).json({ error: 'No fields to update' });
-//   }
-
-//   try {
-//     const keys = Object.keys(updates);
-//     const values = Object.values(updates);
-//     const setString = keys.map((key, index) => `${key} = $${index + 2}`).join(', ');
-
-//     const result = await pool.query(
-//       `UPDATE patients SET ${setString} WHERE patient_id = $1 RETURNING *`,
-//       [id, ...values]
-//     );
-
-//     if (result.rows.length === 0) {
-//       return res.status(404).json({ error: 'Patient not found' });
-//     }
-
-//     res.json({ message: 'Patient updated successfully', patient: result.rows[0] });
-//   } catch (error) {
-//     console.error('Error updating patient:', error);
-//     res.status(500).json({ error: 'Error updating patient' });
-//   }
-// });
-
-
-// // DELETE Patient
-// app.delete('/patients/:id', async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     const result = await pool.query('DELETE FROM patients WHERE patient_id = $1 RETURNING *', [id]);
-//     if (result.rows.length === 0) {
-//       return res.status(404).json({ error: 'Patient not found' });
-//     }
-//     res.json({ message: 'Patient deleted successfully' });
-//   } catch (error) {
-//     console.error('Error deleting patient:', error);
-//     res.status(500).json({ error: 'Error deleting patient' });
-//   }
-// });
-
-//Injection
-app.put('/patient/:id', async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-
-  if (!Object.keys(updates).length) {
-    return res.status(400).json({ error: 'No fields to update' });
-  }
-
-  try {
-    // 
-    const keys = Object.keys(updates);
-    const values = Object.values(updates);
-    
-    const setString = keys.map((key, index) => `${key} = $${index + 2}`).join(', ');
-    
-    //prepared statement in conjunction with pool.query
-    const query = `
-      UPDATE patients
-      SET ${setString}
-      WHERE patient_id = $1
-      RETURNING *;
-    `;
-
-    const result = await pool.query(query, [id, ...values]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
-
-    res.json({ message: 'Patient updated successfully', patient: result.rows[0] });
-  } catch (error) {
-    console.error('Error updating patient:', error);
-    res.status(500).json({ error: 'Error updating patient' });
-  }
-});
-
-
-
 // Routes for Medical Records
 app.get('/medical-records', async (req, res) => {
   try {
@@ -435,8 +306,16 @@ app.get('/medical-records', async (req, res) => {
   }
 });
 
+
+// POST route to add a medical record
 app.post('/medical-records', async (req, res) => {
   const { patient_id, diagnosis, treatment, doctor_notes, medications, record_date } = req.body;
+  
+  // Validate inputs
+  if (!patient_id || !diagnosis || !treatment || !record_date) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
   try {
     const result = await pool.query(
       `INSERT INTO medical_records (patient_id, diagnosis, treatment, doctor_notes, medications, record_date)
@@ -450,9 +329,15 @@ app.post('/medical-records', async (req, res) => {
   }
 });
 
+// PUT route to update a medical record
 app.put('/medical-records/:id', async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
+
+  if (!Object.keys(updates).length) {
+    return res.status(400).json({ error: 'No updates provided' });
+  }
+
   try {
     const keys = Object.keys(updates);
     const values = Object.values(updates);
@@ -469,6 +354,7 @@ app.put('/medical-records/:id', async (req, res) => {
   }
 });
 
+
 app.delete('/medical-records/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -479,6 +365,7 @@ app.delete('/medical-records/:id', async (req, res) => {
     res.status(500).json({ error: 'Error deleting medical record' });
   }
 });
+
 
 
 app.listen(port, () => {
